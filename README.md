@@ -100,7 +100,7 @@ django-shopping-list/
 
 ### 1. Klonování repozitáře
 ```bash
-git clone https://github.com/korkus18/Django-Shopping-List.git
+git clone https://github.com/frantisekmarek05/Django-Shopping-List.git
 cd django-shopping-list
 ```
 
@@ -182,12 +182,3 @@ Aplikace bude dostupná na http://127.0.0.1:8000
 - `/delete/<id>/` - Smazání položky
 - `/complete/<id>/` - Označení položky jako dokončené
 - `/admin/` - Administrační rozhraní
-
-## 📝 Licence
-
-Tento projekt je licencován pod MIT licencí.
-
-## 👥 Autoři
-
-- [@korkus18](https://github.com/korkus18) 
-
