@@ -183,11 +183,3 @@ Aplikace bude dostupná na http://127.0.0.1:8000
 - `/complete/<id>/` - Označení položky jako dokončené
 - `/admin/` - Administrační rozhraní
 
-## 📝 Licence
-
-Tento projekt je licencován pod MIT licencí.
-
-## 👥 Autoři
-
-- [@korkus18](https://github.com/korkus18) 
-
