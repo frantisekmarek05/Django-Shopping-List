@@ -100,7 +100,7 @@ django-shopping-list/
 
 ### 1. Klonování repozitáře
 ```bash
-git clone https://github.com/korkus18/Django-Shopping-List.git
+git clone https://github.com/frantisekmarek05/Django-Shopping-List.git
 cd django-shopping-list
 ```
 
