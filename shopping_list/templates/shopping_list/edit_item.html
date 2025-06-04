@@ -1,0 +1,66 @@
+<!--
+Edit Item Template
+
+This template provides a form for editing an existing shopping list item.
+It extends the base template and offers a user-friendly interface for updating item details.
+
+Features:
+- Item name editing
+- Description editing
+- Image upload/replacement
+- Current image preview
+- Form validation
+- Cancel/Save actions
+-->
+
+{% extends 'base.html' %}
+
+{% block title %}Edit {{ item.itemname }}{% endblock %}
+
+{% block content %}
+<!-- Main container -->
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- Edit form card -->
+            <div class="card">
+                <!-- Card header -->
+                <div class="card-header">
+                    <h2 class="mb-0">Edit Item</h2>
+                </div>
+                <!-- Card body with edit form -->
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <!-- Item name field -->
+                        <div class="mb-3">
+                            <label for="itemname" class="form-label">Item Name</label>
+                            <input type="text" class="form-control" id="itemname" name="itemname" value="{{ item.itemname }}" required>
+                        </div>
+                        <!-- Description field -->
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="3">{{ item.description }}</textarea>
+                        </div>
+                        <!-- Image upload field with preview -->
+                        <div class="mb-3">
+                            <label for="image" class="form-label">Image</label>
+                            {% if item.image %}
+                            <div class="mb-2">
+                                <img src="{{ item.image.url }}" alt="{{ item.itemname }}" style="max-width: 200px; height: auto;">
+                            </div>
+                            {% endif %}
+                            <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                        </div>
+                        <!-- Form actions -->
+                        <div class="d-flex justify-content-between">
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                            <a href="{% url 'item_detail' item.id %}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

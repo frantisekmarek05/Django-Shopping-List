@@ -1,0 +1,117 @@
+<!--
+Base Template for Shopping List Application
+
+This template serves as the foundation for all pages in the application.
+It provides:
+- Responsive meta tags
+- Common CSS (Bootstrap, Font Awesome, Google Fonts)
+- Navigation elements
+- Message/alert system
+- Common layout structure
+- JavaScript dependencies
+
+Template blocks:
+- title: Page title
+- extra_css: Additional CSS for child templates
+- content: Main content area
+- extra_js: Additional JavaScript for child templates
+-->
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Meta tags for proper rendering and responsiveness -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Dynamic title block -->
+    <title>{% block title %}Shopping List{% endblock %}</title>
+    
+    <!-- External CSS dependencies -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+    
+    <!-- Base styles for the application -->
+    <style>
+        /* Main styling */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #F5FFF7;
+        }
+        
+        /* Logout button positioning and styling */
+        .top-right-logout {
+            position: fixed;
+            top: 20px;
+            right: 30px;
+            z-index: 1000;
+        }
+        
+        .logout-btn {
+            color: #333;
+            background-color: #98DBC6;
+            border: none;
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            text-decoration: none;
+            transition: all 0.2s ease-in-out;
+            font-weight: 500;
+            box-shadow: 0 2px 10px rgba(152, 219, 198, 0.3);
+        }
+        
+        .logout-btn:hover {
+            color: #333;
+            background-color: #7BC5AE;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(152, 219, 198, 0.4);
+        }
+        
+        /* Alert styling */
+        .alert {
+            border-radius: 15px;
+            border: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+    </style>
+    
+    <!-- Additional CSS block for child templates -->
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Logout button - shown only when authenticated and not on auth pages -->
+    {% if request.resolver_match.url_name != 'login' and request.resolver_match.url_name != 'register' %}
+    {% if user.is_authenticated %}
+    <div class="top-right-logout">
+        <a class="logout-btn" href="{% url 'logout' %}">
+            <i class="fas fa-sign-out-alt me-1"></i> Odhlásit
+        </a>
+    </div>
+    {% endif %}
+    {% endif %}
+
+    <!-- Django messages/alerts section -->
+    {% if messages %}
+    <div class="container mt-4">
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+        
+    <!-- Main content block -->
+    {% block content %}
+    {% endblock %}
+
+    <!-- JavaScript dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Additional JavaScript block for child templates -->
+    {% block extra_js %}{% endblock %}
+</body>
+</html> 

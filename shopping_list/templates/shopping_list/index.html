@@ -1,0 +1,871 @@
+<!--
+Main Shopping List Template
+
+This template extends the base template and provides the main shopping list interface.
+It includes:
+- Item listing grouped by categories
+- Add item functionality
+- Edit item functionality
+- Image preview functionality
+- Category-specific styling
+- Interactive UI elements
+
+Features:
+- Responsive grid layout for categories
+- Modal forms for adding/editing items
+- Image upload and preview
+- Category color coding
+- Completion status tracking
+-->
+
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Shopping List{% endblock %}
+
+{% block content %}
+<!-- Main container -->
+<div class="container py-4">
+    <!-- Header section with add item button -->
+    <div class="header mb-5">
+        <h1 class="display-4 text-center mb-4">NÁKUPNÍ SEZNAM</h1>
+        <div class="text-center mb-4">
+            <button type="button" class="add-item-btn" data-bs-toggle="modal" data-bs-target="#addItemModal">
+                <i class="fas fa-plus-circle me-2"></i>Přidat položku
+            </button>
+        </div>
+    </div>
+
+    {% if items_saved %}
+    <!-- Categories grid container -->
+    <div class="categories-container">
+        {% for category, items in items_by_category.items %}
+        <!-- Individual category section -->
+        <div class="category-section mb-4">
+            <div class="category-header" data-category="{{ category }}">
+                <h3 class="category-title">{{ category_names|get_item:category }}</h3>
+            </div>
+            <!-- Items list within category -->
+            <div class="category-items">
+                {% for item in items %}
+                <div class="item-row {% if item.completed %}completed{% endif %}" data-item-id="{{ item.id }}">
+                    <!-- Item checkbox and details -->
+                    <div class="form-check d-flex align-items-center">
+                        <input type="checkbox" class="form-check-input me-3" {% if item.completed %}checked{% endif %} 
+                               onclick="window.location.href='{% url 'complete' item.id %}'">
+                        <label class="form-check-label flex-grow-1 d-flex align-items-center">
+                            <!-- Item image thumbnail if exists -->
+                            {% if item.image %}
+                            <div class="item-thumbnail me-3 cursor-pointer" onclick="openImagePreview('{{ item.image.url }}', '{{ item.itemname }}')">
+                                <img src="{{ item.image.url }}" alt="{{ item.itemname }}" class="rounded">
+                            </div>
+                            {% endif %}
+                            <!-- Item name with edit modal trigger -->
+                            <a href="#" class="item-name text-decoration-none {% if item.completed %}text-muted text-decoration-line-through{% endif %} item-detail-link"
+                               data-bs-toggle="modal" 
+                               data-bs-target="#itemDetailModal" 
+                               data-item-id="{{ item.id }}"
+                               data-item-name="{{ item.itemname }}"
+                               data-item-category="{{ item.category }}"
+                               data-item-completed="{{ item.completed|yesno:'true,false' }}"
+                               data-item-date="{{ item.date_added|date:'F j, Y, g:i a' }}"
+                               {% if item.image %}data-item-image="{{ item.image.url }}"{% endif %}>
+                                {{ item.itemname }}
+                            </a>
+                        </label>
+                        <!-- Item action buttons -->
+                        <div class="item-actions">
+                            <a href="#" class="btn btn-link btn-sm p-0 me-2 item-detail-link" 
+                               title="Upravit položku"
+                               data-bs-toggle="modal" 
+                               data-bs-target="#itemDetailModal"
+                               data-item-id="{{ item.id }}"
+                               data-item-name="{{ item.itemname }}"
+                               data-item-category="{{ item.category }}"
+                               data-item-completed="{{ item.completed|yesno:'true,false' }}"
+                               data-item-date="{{ item.date_added|date:'F j, Y, g:i a' }}"
+                               {% if item.image %}data-item-image="{{ item.image.url }}"{% endif %}>
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="{% url 'deleteitem' item.id %}" class="btn btn-link btn-sm p-0 text-danger" title="Smazat položku">
+                                <i class="fas fa-times"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Delete all button -->
+    {% if itemsList %}
+    <div class="text-center mt-5">
+        <a href="{% url 'deleteall' %}" class="btn btn-outline-danger rounded-pill px-4">Vymazat vše</a>
+    </div>
+    {% endif %}
+    
+    {% else %}
+    <!-- Empty list message -->
+    <div class="alert alert-info text-center rounded-pill">
+        Váš nákupní seznam je prázdný. Přidejte nějaké položky!
+    </div>
+    {% endif %}
+</div>
+
+<!-- Add Item Modal -->
+<div class="modal fade" id="addItemModal" tabindex="-1" aria-labelledby="addItemModalLabel" aria-hidden="true">
+    <!-- Modal content for adding new items -->
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addItemModalLabel">Přidat novou položku</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Add item form -->
+                <form id="addItemForm" action="{% url 'add' %}" method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="newItemName" class="form-label">Název položky</label>
+                        <input type="text" class="form-control" id="newItemName" name="item" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="category" class="form-label">Kategorie</label>
+                        <select class="form-select" id="category" name="category" required>
+                            <option value="dairy">Mléčné výrobky</option>
+                            <option value="vegetables">Ovoce a zelenina</option>
+                            <option value="frozen">Mražené potraviny</option>
+                            <option value="meal">Hotová jídla</option>
+                            <option value="bread">Pečivo</option>
+                            <option value="other">Ostatní</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="newItemImage" class="form-label">Obrázek (volitelné)</label>
+                        <div id="newItemImagePreview" class="mb-2 text-center" style="display: none;">
+                            <img src="" alt="" class="img-fluid" style="max-height: 200px; object-fit: contain;">
+                        </div>
+                        <input type="file" class="form-control" id="newItemImage" name="image" accept="image/*">
+                    </div>
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zrušit</button>
+                        <button type="submit" id="addItemBtn" class="btn btn-primary">Přidat položku</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Item Modal -->
+<div class="modal fade" id="itemDetailModal" tabindex="-1" aria-labelledby="itemDetailModalLabel" aria-hidden="true">
+    <!-- Modal content for editing existing items -->
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="itemDetailModalLabel">Upravit položku</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Edit item form -->
+                <form id="editItemForm" method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="itemname" class="form-label">Název položky</label>
+                        <input type="text" class="form-control" id="itemname" name="itemname" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editCategory" class="form-label">Kategorie</label>
+                        <select class="form-select" id="editCategory" name="category" required>
+                            <option value="dairy">Mléčné výrobky</option>
+                            <option value="vegetables">Ovoce a zelenina</option>
+                            <option value="frozen">Mražené potraviny</option>
+                            <option value="meal">Hotová jídla</option>
+                            <option value="bread">Pečivo</option>
+                            <option value="other">Ostatní</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="image" class="form-label">Obrázek</label>
+                        <div id="currentImage" class="mb-2 text-center" style="display: none;">
+                            <img src="" alt="" class="img-fluid" style="max-height: 200px; object-fit: contain;">
+                        </div>
+                        <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="completed" name="completed">
+                            <label class="form-check-label" for="completed">Označit jako dokončené</label>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <p class="text-muted mb-2" id="itemDate"></p>
+                    </div>
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zrušit</button>
+                        <a href="#" id="deleteItemBtn" class="btn btn-danger">Smazat</a>
+                        <button type="submit" id="saveChangesBtn" class="btn btn-primary">Uložit změny</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Image Preview Modal -->
+<div class="modal fade" id="imagePreviewModal" tabindex="-1" aria-labelledby="imagePreviewModalLabel" aria-hidden="true">
+    <!-- Modal for displaying full-size images -->
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imagePreviewModalLabel"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center p-0">
+                <img src="" alt="" class="img-fluid" style="max-height: 80vh; width: auto;">
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+<!-- Styles for the shopping list interface -->
+<style>
+    /* Main layout styling */
+    body {
+        background-color: #F5FFF7;
+    }
+
+    .container {
+        max-width: 1200px;
+    }
+
+    /* Categories grid layout */
+    .categories-container {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2rem;
+    }
+
+    /* Category section styling */
+    .category-section {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    .category-header {
+        margin-bottom: 1.5rem;
+        position: relative;
+    }
+
+    /* Category-specific color coding */
+    .category-header[data-category="dairy"] .category-title {
+        background-color: #FFE5BA;
+    }
+
+    .category-header[data-category="vegetables"] .category-title {
+        background-color: #FFD1D1;
+    }
+
+    .category-header[data-category="frozen"] .category-title {
+        background-color: #E0E0E0;
+    }
+
+    .category-header[data-category="meal"] .category-title {
+        background-color: #D1FFD1;
+    }
+
+    .category-header[data-category="bread"] .category-title {
+        background-color: #FFE5BA;
+    }
+
+    .category-header[data-category="other"] .category-title {
+        background-color: #E6E6FA;
+    }
+
+    .category-title {
+        display: inline-block;
+        padding: 0.5rem 1.5rem;
+        border-radius: 20px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin: 0;
+        color: #333;
+    }
+
+    .item-row {
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #eee;
+    }
+
+    .item-row:last-child {
+        border-bottom: none;
+    }
+
+    .form-check-input {
+        width: 1.2rem;
+        height: 1.2rem;
+        border-radius: 50%;
+        border: 2px solid #666;
+        cursor: pointer;
+    }
+
+    .form-check-input:checked {
+        background-color: #28a745;
+        border-color: #28a745;
+    }
+
+    .item-name {
+        color: #333;
+        font-size: 1rem;
+    }
+
+    .item-actions {
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+
+    .item-row:hover .item-actions {
+        opacity: 1;
+    }
+
+    .completed .item-name {
+        text-decoration: line-through;
+        color: #999;
+    }
+
+    @media (max-width: 768px) {
+        .categories-container {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Modal Styling */
+    .modal-content {
+        border-radius: 20px;
+        border: none;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        background-color: #F9FFFC;
+    }
+
+    .modal-header {
+        border-bottom: 2px solid #E3F6EF;
+        padding: 1.5rem 2rem;
+        background-color: white;
+        border-radius: 20px 20px 0 0;
+    }
+
+    .modal-header .modal-title {
+        color: #333;
+        font-weight: 600;
+        font-size: 1.4rem;
+    }
+
+    .modal-header .btn-close {
+        background-color: #98DBC6;
+        opacity: 0.8;
+        border-radius: 50%;
+        padding: 0.8rem;
+    }
+
+    .modal-header .btn-close:hover {
+        opacity: 1;
+        background-color: #7BC5AE;
+    }
+
+    .modal-body {
+        padding: 2rem;
+        background-color: #F9FFFC;
+    }
+
+    .modal-body .form-label {
+        color: #666;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+
+    .modal-body .form-control,
+    .modal-body .form-select {
+        border: 2px solid #E3F6EF;
+        border-radius: 12px;
+        padding: 0.8rem 1rem;
+        background-color: white;
+        transition: all 0.3s ease;
+    }
+
+    .modal-body .form-control:focus,
+    .modal-body .form-select:focus {
+        border-color: #98DBC6;
+        box-shadow: 0 0 0 0.2rem rgba(152, 219, 198, 0.25);
+    }
+
+    .modal-body .form-check-input {
+        background-color: white;
+        border-color: #98DBC6;
+    }
+
+    .modal-body .form-check-input:checked {
+        background-color: #98DBC6;
+        border-color: #98DBC6;
+    }
+
+    .modal-body .form-check-label {
+        color: #666;
+    }
+
+    .modal-body .text-muted {
+        color: #999 !important;
+        font-size: 0.9rem;
+    }
+
+    .modal .btn {
+        padding: 0.8rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .modal .btn-secondary {
+        background-color: #E0E0E0;
+        border: none;
+        color: #666;
+    }
+
+    .modal .btn-secondary:hover {
+        background-color: #D0D0D0;
+        color: #333;
+    }
+
+    .modal .btn-primary {
+        background-color: #98DBC6;
+        border: none;
+        color: #333;
+    }
+
+    .modal .btn-primary:hover {
+        background-color: #7BC5AE;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 15px rgba(152, 219, 198, 0.4);
+    }
+
+    .modal .btn-danger {
+        background-color: #FFD1D1;
+        border: none;
+        color: #333;
+    }
+
+    .modal .btn-danger:hover {
+        background-color: #FFB5B5;
+        color: #333;
+    }
+
+    #currentImage,
+    #newItemImagePreview {
+        background-color: white;
+        border-radius: 12px;
+        padding: 1rem;
+        border: 2px dashed #E3F6EF;
+        margin-bottom: 1rem;
+    }
+
+    #currentImage img,
+    #newItemImagePreview img {
+        border-radius: 8px;
+    }
+
+    .alert {
+        border-radius: 12px;
+        border: none;
+    }
+
+    .alert-success {
+        background-color: #D1FFE9;
+        color: #1a573b;
+    }
+
+    .alert-danger {
+        background-color: #FFD1D1;
+        color: #571a1a;
+    }
+
+    .spinner-border {
+        border-color: #333;
+        border-right-color: transparent;
+    }
+
+    .add-item-btn {
+        background-color: #98DBC6;
+        color: #333;
+        border: none;
+        padding: 1rem 2.5rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        border-radius: 50px;
+        box-shadow: 0 4px 15px rgba(152, 219, 198, 0.4);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .add-item-btn:hover {
+        background-color: #7BC5AE;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(152, 219, 198, 0.6);
+    }
+
+    .add-item-btn:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 10px rgba(152, 219, 198, 0.4);
+    }
+
+    .add-item-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(45deg, rgba(255,255,255,0.1), rgba(255,255,255,0.2));
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .add-item-btn:hover::before {
+        opacity: 1;
+    }
+
+    .item-thumbnail {
+        width: 40px;
+        height: 40px;
+        overflow: hidden;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: transform 0.2s ease-in-out;
+    }
+
+    .item-thumbnail img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .item-thumbnail:hover {
+        transform: scale(1.1);
+        cursor: pointer;
+    }
+
+    .cursor-pointer {
+        cursor: pointer;
+    }
+
+    #imagePreviewModal .modal-content {
+        background-color: rgba(255, 255, 255, 0.98);
+    }
+
+    #imagePreviewModal .modal-body {
+        padding: 0;
+        background-color: rgba(0, 0, 0, 0.02);
+    }
+
+    #imagePreviewModal img {
+        max-width: 100%;
+        height: auto;
+    }
+</style>
+
+<!-- JavaScript for interactive features -->
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('itemDetailModal');
+    const modalInstance = new bootstrap.Modal(modal);
+    const editForm = document.getElementById('editItemForm');
+    const saveButton = document.getElementById('saveChangesBtn');
+    let currentItemId = null;
+
+    // Function to show loading state
+    function setLoadingState(isLoading) {
+        if (saveButton) {
+            saveButton.disabled = isLoading;
+            saveButton.innerHTML = isLoading ? '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...' : 'Uložit změny';
+        }
+    }
+
+    // Function to show error message
+    function showError(message) {
+        clearMessages();
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'alert alert-danger alert-dismissible fade show mt-3';
+        errorDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        editForm.insertAdjacentElement('afterbegin', errorDiv);
+    }
+
+    // Function to show success message
+    function showSuccess(message) {
+        clearMessages();
+        const successDiv = document.createElement('div');
+        successDiv.className = 'alert alert-success alert-dismissible fade show mt-3';
+        successDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        editForm.insertAdjacentElement('afterbegin', successDiv);
+    }
+
+    // Function to clear all messages
+    function clearMessages() {
+        const messages = editForm.querySelectorAll('.alert');
+        messages.forEach(message => message.remove());
+    }
+
+    // Function to update item in the list
+    function updateItemInList(itemData) {
+        const itemRow = document.querySelector(`.item-row[data-item-id="${itemData.id}"]`);
+        if (itemRow) {
+            const itemLink = itemRow.querySelector('.item-name');
+            const checkbox = itemRow.querySelector('.form-check-input');
+            
+            itemLink.textContent = itemData.itemname;
+            itemLink.dataset.itemName = itemData.itemname;
+            itemLink.dataset.itemCategory = itemData.category;
+            itemLink.dataset.itemCompleted = itemData.completed;
+            itemLink.dataset.itemDate = itemData.date_added;
+            
+            if (itemData.completed) {
+                itemRow.classList.add('completed');
+                itemLink.classList.add('text-muted', 'text-decoration-line-through');
+                checkbox.checked = true;
+            } else {
+                itemRow.classList.remove('completed');
+                itemLink.classList.remove('text-muted', 'text-decoration-line-through');
+                checkbox.checked = false;
+            }
+            
+            // Move item to correct category if needed
+            const currentCategorySection = itemRow.closest('.category-section');
+            const newCategorySection = document.querySelector(`.category-header[data-category="${itemData.category}"]`).closest('.category-section');
+            
+            if (currentCategorySection !== newCategorySection) {
+                const itemsContainer = newCategorySection.querySelector('.category-items');
+                itemRow.remove();
+                itemsContainer.appendChild(itemRow);
+            }
+        }
+    }
+
+    // Function to open modal with specific item data
+    function openItemModal(linkElement) {
+        clearMessages();
+        const data = linkElement.dataset;
+        currentItemId = data.itemId;
+        
+        // Update form action
+        editForm.action = `/item/${currentItemId}/edit/`;
+        
+        // Update form fields
+        document.getElementById('itemname').value = data.itemName || '';
+        document.getElementById('editCategory').value = data.itemCategory || 'other';
+        document.getElementById('completed').checked = data.itemCompleted === 'true';
+        
+        // Update image preview
+        const currentImage = document.getElementById('currentImage');
+        const imagePreview = currentImage.querySelector('img');
+        if (data.itemImage) {
+            imagePreview.src = data.itemImage;
+            imagePreview.alt = data.itemName;
+            currentImage.style.display = 'block';
+        } else {
+            currentImage.style.display = 'none';
+        }
+        
+        // Update date
+        document.getElementById('itemDate').textContent = `Přidáno: ${data.itemDate || ''}`;
+        
+        // Update delete button
+        const deleteBtn = document.getElementById('deleteItemBtn');
+        if (deleteBtn) {
+            deleteBtn.href = `/deleteitem/${currentItemId}/`;
+        }
+
+        modalInstance.show();
+    }
+
+    // Add click handlers to all detail links
+    document.querySelectorAll('.item-detail-link').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            openItemModal(this);
+        });
+    });
+
+    // Handle form submission
+    if (editForm) {
+        editForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            clearMessages();
+            setLoadingState(true);
+            
+            try {
+                const formData = new FormData(this);
+                formData.append('completed', document.getElementById('completed').checked);
+                
+                const response = await fetch(this.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                let data;
+                try {
+                    const text = await response.text();
+                    data = JSON.parse(text);
+                } catch (e) {
+                    console.error('Response parsing error:', e);
+                    throw new Error('Failed to process server response');
+                }
+
+                if (!response.ok) {
+                    throw new Error(data.error || `Server error: ${response.status}`);
+                }
+
+                if (data.success) {
+                    // Update the item in the list
+                    updateItemInList(data.item);
+                    
+                    // Show success message
+                    showSuccess('Změny byly úspěšně uloženy!');
+                    
+                    // Close modal after short delay
+                    setTimeout(() => {
+                        modalInstance.hide();
+                        window.location.reload(); // Refresh to ensure proper category organization
+                    }, 1500);
+                } else {
+                    throw new Error(data.error || 'Unknown error occurred');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showError(error.message || 'Chyba při ukládání změn. Zkuste to prosím znovu.');
+                setLoadingState(false);
+            }
+        });
+    }
+
+    // Image preview handler
+    const imageInput = document.getElementById('image');
+    if (imageInput) {
+        imageInput.addEventListener('change', function() {
+            const currentImage = document.getElementById('currentImage');
+            const imagePreview = currentImage.querySelector('img');
+            
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    currentImage.style.display = 'block';
+                };
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+    }
+
+    // Check if we need to open a specific item's modal
+    const editedItemId = '{{ edited_item_id }}';
+    if (editedItemId) {
+        const editedItemLink = document.querySelector(`.item-detail-link[data-item-id="${editedItemId}"]`);
+        if (editedItemLink) {
+            openItemModal(editedItemLink);
+        }
+    }
+
+    // Add Item Modal Functionality
+    const addItemModal = document.getElementById('addItemModal');
+    const addItemForm = document.getElementById('addItemForm');
+    const addItemBtn = document.getElementById('addItemBtn');
+
+    // Function to show loading state for add item
+    function setAddItemLoadingState(isLoading) {
+        if (addItemBtn) {
+            addItemBtn.disabled = isLoading;
+            addItemBtn.innerHTML = isLoading ? '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Adding...' : 'Add Item';
+        }
+    }
+
+    // Handle add item form submission
+    if (addItemForm) {
+        addItemForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            setAddItemLoadingState(true);
+            
+            try {
+                const formData = new FormData(this);
+                
+                const response = await fetch(this.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to add item');
+                }
+
+                // Refresh the page to show the new item
+                window.location.reload();
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error adding item. Please try again.');
+                setAddItemLoadingState(false);
+            }
+        });
+    }
+
+    // Image preview for new item
+    const newItemImage = document.getElementById('newItemImage');
+    if (newItemImage) {
+        newItemImage.addEventListener('change', function() {
+            const preview = document.getElementById('newItemImagePreview');
+            const previewImg = preview.querySelector('img');
+            
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImg.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(this.files[0]);
+            } else {
+                preview.style.display = 'none';
+            }
+        });
+    }
+});
+
+function openImagePreview(imageUrl, itemName) {
+    const modal = new bootstrap.Modal(document.getElementById('imagePreviewModal'));
+    const modalTitle = document.getElementById('imagePreviewModalLabel');
+    const modalImage = document.querySelector('#imagePreviewModal img');
+    
+    modalTitle.textContent = itemName;
+    modalImage.src = imageUrl;
+    modalImage.alt = itemName;
+    
+    modal.show();
+}
+</script>
+{% endblock %}
