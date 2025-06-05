@@ -1,11 +1,5 @@
 """
-Shopping List Views Module
-This module contains all the view functions for the shopping list application.
-It handles user authentication, CRUD operations for shopping list items,
-and various utility functions for managing the shopping list.
-The views support both regular HTTP requests and AJAX calls, providing
-appropriate responses based on the request type.
-
+Shopping List Views Modul
 Obsahuje funkce, které zpracovávají požadavky uživatele (např. „přidat položku“, „zobrazit seznam“, „smazat položku“).
 """
 
