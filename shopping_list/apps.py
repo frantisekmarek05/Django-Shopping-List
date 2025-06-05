@@ -1,8 +1,7 @@
 """
 Shopping List Application Configuration
 
-This module contains the Django application configuration for the shopping list app.
-It defines the app name and any application-specific settings or signals.
+Definuje konfigurační třídu aplikace, která říká Djangu název aplikace a může obsahovat další specifická nastavení nebo chování při jejím spuštění.
 """
 
 from django.apps import AppConfig
@@ -10,10 +9,9 @@ from django.apps import AppConfig
 
 class ShoppingListConfig(AppConfig):
     """
-    Configuration class for the Shopping List application.
-    
-    This class handles the application's configuration, including app name,
-    and can be extended to include signal handlers and app-specific settings.
+    Konfigurační třída pro aplikaci nákupního seznamu.
+    Tato třída se stará o základní nastavení aplikace, například o její název, 
+    a může být rozšířena o zpracování signálů nebo další specifická nastavení dané aplikace.
     """
     name = 'shopping_list'
     verbose_name = 'Shopping List Manager'
