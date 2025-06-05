@@ -37,10 +37,14 @@ class ItemsList(models.Model):
 	)
 
 	def __str__(self):
-		"""Returns a string representation of the shopping item."""
+		"""
+  		Vrací textovou reprezentaci položky nákupu.
+  		"""
 		return self.itemname
 
 	class Meta:
-		"""Meta options for the ItemsList model."""
-		ordering = ['-date_added']  # Orders items by date added, newest first
+		"""
+  		Možnosti třídy Meta pro model ItemsList.
+  		"""
+		ordering = ['-date_added']  # Řadí položky podle data přidání, nejnovější jako první.
 
