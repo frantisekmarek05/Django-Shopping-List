@@ -1,12 +1,12 @@
 """
 Shopping List Views Module
-
 This module contains all the view functions for the shopping list application.
 It handles user authentication, CRUD operations for shopping list items,
 and various utility functions for managing the shopping list.
-
 The views support both regular HTTP requests and AJAX calls, providing
 appropriate responses based on the request type.
+
+Obsahuje funkce, které zpracovávají požadavky uživatele (např. „přidat položku“, „zobrazit seznam“, „smazat položku“).
 """
 
 from django.shortcuts import render, redirect, get_object_or_404
@@ -26,10 +26,9 @@ logger = logging.getLogger(__name__)
 
 def register(request):
 	"""
-	Handle user registration.
-	
-	Processes both GET (registration form) and POST (form submission) requests.
-	On successful registration, logs in the user and redirects to the index page.
+	Zpracování registrace uživatele.
+	Zpracovává jak požadavky typu GET (zobrazení registračního formuláře), tak POST (odeslání formuláře).
+	Po úspěšné registraci přihlásí uživatele a přesměruje ho na hlavní stránku (index).
 	"""
 	if request.method == 'POST':
 		form = UserCreationForm(request.POST)
@@ -45,11 +44,11 @@ def register(request):
 @login_required
 def index(request):
 	"""
-	Display the main shopping list page.
-	
-	Shows all shopping items grouped by their categories.
-	Only displays non-empty categories and includes category translations.
-	Requires user authentication.
+	Zobrazení hlavní stránky s nákupním seznamem.
+	Zobrazí všechny položky v seznamu, rozdělené podle kategorií.
+	Zobrazí jen ty kategorie, které nejsou prázdné.
+	Zahrnuje překlady názvů kategorií.
+	Vyžaduje, aby byl uživatel přihlášen.
 	"""
 	# Get all items and group them by category
 	all_items = ItemsList.objects.filter(user=request.user)
@@ -83,11 +82,10 @@ def index(request):
 @login_required
 def addItem(request):
 	"""
-	Add a new shopping list item.
-	
-	Handles POST requests for creating new items.
-	Supports both regular form submissions and AJAX requests.
-	Can handle image uploads and validates required fields.
+	Přidání nové položky do nákupního seznamu.
+	Zpracovává požadavky typu POST pro vytvoření nové položky.
+	Podporuje jak běžné odeslání formuláře, tak i AJAX požadavky.
+	Umí pracovat s nahráváním obrázků a ověřuje povinná pole.
 	"""
 	if request.method == 'POST':
 		item_name = request.POST.get('item', '').strip()
@@ -160,9 +158,9 @@ def addItem(request):
 @login_required
 def item_detail(request, item_id):
 	"""
-	Display detailed information about a specific shopping list item.
-	
-	Shows all item attributes and allows for viewing the full image if present.
+	Zobrazení podrobných informací o konkrétní položce v nákupním seznamu.
+	Zobrazí všechny atributy položky.
+	Umožní zobrazit celý obrázek, pokud je k položce přiložen.
 	"""
 	item = get_object_or_404(ItemsList, id=item_id, user=request.user)
 	return render(request, 'shopping_list/item_detail.html', {'item': item})
@@ -170,11 +168,10 @@ def item_detail(request, item_id):
 @login_required
 def edit_item(request, item_id):
 	"""
-	Handle item editing functionality.
-	
-	Supports both GET (form display) and POST (update) requests.
-	Handles image uploads and deletions.
-	Validates input data and provides appropriate error messages.
+	Zajišťuje funkci úpravy položky.
+	Podporuje požadavky typu GET (zobrazení formuláře) i POST (uložení změn).
+	Umí nahrávat i mazat obrázky.
+	Ověřuje vstupní data a poskytuje odpovídající chybová hlášení.
 	"""
 	try:
 		item = get_object_or_404(ItemsList, id=item_id, user=request.user)
@@ -263,10 +260,9 @@ def edit_item(request, item_id):
 @login_required
 def completeItem(request, item_id):
 	"""
-	Mark a shopping list item as completed.
-	
-	Updates the completed status of an item and redirects back to the index page.
-	Only allows users to complete their own items.
+	Označení položky v nákupním seznamu jako dokončené.
+	Aktualizuje stav položky na „zakoupeno“ a přesměruje zpět na hlavní stránku.
+	Pouze uživatel, který položku vlastní, ji může označit jako dokončenou.
 	"""
 	try:
 		item = ItemsList.objects.get(id=item_id)
@@ -281,10 +277,9 @@ def completeItem(request, item_id):
 @login_required
 def deleteItem(request, item_id):
 	"""
-	Delete a specific shopping list item.
-	
-	Removes both the item record and any associated image file.
-	Only allows users to delete their own items.
+	Smazání konkrétní položky z nákupního seznamu.
+	Odstraní záznam položky i případný připojený obrázek.
+	Položku může smazat pouze její vlastník (přihlášený uživatel).
 	"""
 	try:
 		item = ItemsList.objects.get(id=item_id)
@@ -300,10 +295,9 @@ def deleteItem(request, item_id):
 @login_required
 def deleteAll(request):
 	"""
-	Delete all shopping list items for the current user.
-	
-	Removes all items and their associated image files.
-	Provides feedback through a success message.
+	Smazání všech položek z nákupního seznamu aktuálního uživatele.
+	Odstraní všechny položky i jejich připojené obrázky.
+	Po dokončení zobrazí potvrzovací zprávu o úspěšném smazání.
 	"""
 	items = ItemsList.objects.filter(user=request.user)
 	for item in items:
