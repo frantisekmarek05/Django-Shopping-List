@@ -1,9 +1,7 @@
 """
 Shopping List Models Module
 
-This module defines the data models for the shopping list application.
-It contains the ItemsList model which represents a shopping list item
-with various attributes such as name, category, completion status, and optional image.
+Slouží k definici datových struktur aplikace, které se automaticky převádějí na databázové tabulky.
 """
 
 from django.db import models
@@ -11,10 +9,9 @@ from django.contrib.auth.models import User
 
 class ItemsList(models.Model):
 	"""
-	Represents a shopping list item with associated metadata.
-	
-	Each item belongs to a specific user and can be categorized, marked as completed,
-	and optionally include an image and description.
+	Reprezentuje položku v nákupním seznamu s doplňujícími informacemi.
+	Každá položka patří konkrétnímu uživateli, může být zařazena do kategorie, 
+ 	označena jako dokončená a volitelně může obsahovat obrázek a popis.
 	"""
 
 	CATEGORY_CHOICES = [
