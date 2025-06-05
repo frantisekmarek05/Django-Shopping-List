@@ -1,14 +1,13 @@
 """
 Main URL Configuration for Shopping List Project
 
-This module defines the root URL configuration for the entire project.
-It includes:
-- Admin interface URLs
-- Shopping list application URLs
-- Media file serving for development
-
-The URL patterns are structured to provide a clean and intuitive URL scheme,
-with the shopping list application handling the root URL ('/').
+Tento modul definuje hlavní (kořenovou) URL konfiguraci pro celý projekt.
+Obsahuje:
+    URL adresy pro administrátorské rozhraní
+    URL adresy pro aplikaci nákupního seznamu
+    Obsluhu mediálních souborů během vývoje
+Struktura URL adres je navržena tak, aby byla přehledná a logická –
+hlavní URL adresa ('/') je předána aplikaci nákupního seznamu, která ji obsluhuje.
 """
 
 from django.contrib import admin
