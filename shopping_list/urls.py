@@ -1,12 +1,7 @@
 """
 Shopping List URLs Configuration
 
-This module defines the URL routing for the shopping list application.
-It includes routes for CRUD operations on shopping items, user authentication,
-and various utility endpoints.
-
-All routes requiring authentication are protected by the @login_required decorator
-in their respective view functions.
+slouží k propojení URL adresy s konkrétními view funkcemi (tedy co se má zobrazit, když uživatel navštíví určitou adresu).
 """
 
 from django.urls import path
@@ -14,17 +9,18 @@ from django.contrib.auth import views as auth_views
 from . import views
 
 urlpatterns = [
-    # Main application URLs
-    path("", views.index, name="index"),  # Main shopping list view
-    path("add/", views.addItem, name="add"),  # Add new item
-    path("complete/<int:item_id>/", views.completeItem, name="complete"),  # Mark item as complete
-    path("deleteitem/<int:item_id>/", views.deleteItem, name="deleteitem"),  # Delete specific item
-    path("deleteall/", views.deleteAll, name="deleteall"),  # Delete all items
-    path("item/<int:item_id>/", views.item_detail, name="item_detail"),  # View item details
-    path("item/<int:item_id>/edit/", views.edit_item, name="edit_item"),  # Edit item
-    
-    # Authentication URLs
-    path('login/', auth_views.LoginView.as_view(), name='login'),  # User login
-    path('logout/', auth_views.LogoutView.as_view(), name='logout'),  # User logout
-    path('register/', views.register, name='register'),  # User registration
+    # Hlavní URL adresy aplikace
+    path("", views.index, name="index"),  # Hlavní zobrazení nákupního seznamu
+    path("add/", views.addItem, name="add"),  # Přidání nové položky
+    path("complete/<int:item_id>/", views.completeItem, name="complete"),  # Označení položky jako dokončené
+    path("deleteitem/<int:item_id>/", views.deleteItem, name="deleteitem"),  # Smazání konkrétní položky
+    path("deleteall/", views.deleteAll, name="deleteall"),  # Smazání všech položek
+    path("item/<int:item_id>/", views.item_detail, name="item_detail"),  # Zobrazení detailu položky
+    path("item/<int:item_id>/edit/", views.edit_item, name="edit_item"),  # Úprava položky
+
+    # URL adresy pro přihlášení a registraci
+    path('login/', auth_views.LoginView.as_view(), name='login'),  # Přihlášení uživatele
+    path('logout/', auth_views.LogoutView.as_view(), name='logout'),  # Odhlášení uživatele
+    path('register/', views.register, name='register'),  # Registrace uživatele
+
 ]
