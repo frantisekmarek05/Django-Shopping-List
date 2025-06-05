@@ -1,12 +1,12 @@
 """
 WSGI Configuration for Shopping List Project
 
-This module contains the WSGI application configuration used by Django's development server
-and other production servers such as Gunicorn or uWSGI. It exposes the WSGI callable
-as a module-level variable named 'application'.
+Tento modul obsahuje konfiguraci WSGI aplikace, kterou využívá vývojový server Djanga
+a také produkční servery jako Gunicorn nebo uWSGI.
+Zpřístupňuje tzv. WSGI objekt jako proměnnou na úrovni modulu s názvem application.
 
-The WSGI configuration is used to serve the application in a production environment.
-It provides the interface between the web server and the Django application.
+Konfigurace WSGI slouží k nasazení aplikace v produkčním prostředí.
+Zajišťuje rozhraní mezi webovým serverem a Django aplikací.
 """
 
 import os
