@@ -1,17 +1,16 @@
 """
 Django Settings Module for Shopping List Project
 
-This module contains all Django settings for the Shopping List application.
-It includes configurations for:
-- Security settings (DEBUG, SECRET_KEY, etc.)
-- Application dependencies
-- Database configuration
-- Authentication settings
-- Static and media file handling
-- Internationalization
-- Custom application settings
-
-For more information on Django settings, see:
+Tento modul obsahuje veškerá nastavení Django pro aplikaci nákupního seznamu.
+Zahrnuje konfiguraci následujících oblastí:
+    Bezpečnostních nastavení (např. DEBUG, SECRET_KEY)
+    Závislostí aplikace (seznam INSTALLED_APPS)
+    Databáze (typ, název, připojení)
+    Ověřování uživatelů (např. přihlašování, registrace)
+    Statických a mediálních souborů (např. obrázky, CSS)
+    Mezinárodního nastavení (jazyk, časové pásmo)
+    Vlastních nastavení aplikace (např. cesty, přesměrování)
+Více informací v dokumentaci Djanga:
 https://docs.djangoproject.com/en/stable/topics/settings/
 """
 
