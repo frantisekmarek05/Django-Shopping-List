@@ -44,7 +44,7 @@ def index(request):
 	Zahrnuje překlady názvů kategorií.
 	Vyžaduje, aby byl uživatel přihlášen.
 	"""
-	# Get all items and group them by category
+	# Získá všechny položky a seskupí je podle kategorie.
 	all_items = ItemsList.objects.filter(user=request.user)
 	items_by_category = {
 		'dairy': all_items.filter(category='dairy'),
@@ -55,7 +55,7 @@ def index(request):
 		'other': all_items.filter(category='other')
 	}
 	
-	# Remove empty categories
+	# Odstraní prázdné kategorie.
 	items_by_category = {k: v for k, v in items_by_category.items() if v.exists()}
 	
 	category_names = {
